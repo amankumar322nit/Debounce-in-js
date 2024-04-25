@@ -18,7 +18,6 @@
 //     }
 // };
 
-
 // const debounceCount=debounce(()=>{
 //     trigger++;
 //     trg.innerHTML=trigger;
@@ -37,7 +36,6 @@
 //     }
 // };
 
-
 // const  throtllingCount=throtlling(()=>{
 //     thro++;
 //     thr.innerHTML=thro;
@@ -49,43 +47,67 @@
 //     throtllingCount();
 // })
 
+// function cachedCall(time) {
+//     const cache = {};
+//     return async (url) => {
+//       const key = `${url}`;
+//       const entry = cache[key];
+//       if (entry && entry.expiry > Date.now()) {
+//         console.log("cache_Value");
+//         return entry.data;
+//       }
+//       try {
+//         console.log('Request sent to the server')
+//         const resp = await fetch(url);
+//         const data = await resp.json();
+//         cache[key] = {
+//           data,
+//           expiry: Date.now() + time,
+//         };
+//         return data;
+//       } catch (e) {
+//         console.log("Error", e);
+//       }
+//     };
+//   }
 
+//   const call = cachedCall(1200);
+//   setTimeout(()=>{
+//     call("https://jsonplaceholder.typicode.com/todos/1").then((data) =>
+//       console.log(data)
+//     )},
+//     800
+//   );
+//   setTimeout(()=>{
+//     call("https://jsonplaceholder.typicode.com/todos/1").then((data) =>
+//       console.log(data)
+//     )},
+//     1800
+//   );
+const fetchWithTimeout = (url, delay) => {
+  return new Promise((resolve, reject) => {
+    const controller = new AbortController();
+    const signal = controller.signal;
+    let timer = null;
+    fetch(url,{signal})
+      .then((res) => {
+        clearTimeout(timer);
+        resolve(res);
+      })
+      .catch((err) => {
+        reject(err);
+      });
 
-function cachedCall(time) {
-    const cache = {};
-    return async (url) => {
-      const key = `${url}`;
-      const entry = cache[key];
-      if (entry && entry.expiry > Date.now()) {
-        console.log("cache_Value");
-        return entry.data;
-      }
-      try {
-        console.log('Request sent to the server')
-        const resp = await fetch(url);
-        const data = await resp.json();
-        cache[key] = {
-          data,
-          expiry: Date.now() + time,
-        };
-        return data;
-      } catch (e) {
-        console.log("Error", e);
-      }
-    };
-  }
-  
-  const call = cachedCall(1200);
-  setTimeout(()=>{
-    call("https://jsonplaceholder.typicode.com/todos/1").then((data) =>
-      console.log(data)
-    )},
-    800
-  );
-  setTimeout(()=>{
-    call("https://jsonplaceholder.typicode.com/todos/1").then((data) =>
-      console.log(data)
-    )},
-    1800
-  );
-  
+    timer = setTimeout(() => {
+      controller.abort();
+    }, delay);
+  });
+};
+
+fetchWithTimeout("https://jsonplaceholder.typicode.com/todos/1", 200)
+  .then((resp) => {
+    console.log(resp);
+  })
+  .catch((error) => {
+    console.error(error);
+  });
